@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 from datetime import date
+import os
+import openpyxl
+from openpyxl import load_workbook
 
 today = date.today().strftime('%m %d %Y')
 day = date.today().strftime('%d')
@@ -400,3 +403,164 @@ with pd.ExcelWriter("hello.xlsx", engine='xlsxwriter') as writer:
 
 print(pd.ExcelFile("hello.xlsx", engine='openpyxl').sheet_names)
 """
+
+file_list = [output_file, 'combined_tables.xlsx', 'pivot_table.xlsx']
+
+combined_workbook = openpyxl.Workbook()
+combined_workbook.remove(combined_workbook.active)  # Remove the default sheet
+
+# Iterate over each Excel file in the input folder
+for filename in file_list:
+    if filename.endswith(".xlsx"):
+        file_path = os.path.join(os.getcwd(), filename)
+        workbook = load_workbook(file_path)
+        
+        # Copy each sheet from the input workbook to the combined workbook
+        for sheet_name in workbook.sheetnames:
+            source_sheet = workbook[sheet_name]
+            combined_sheet = combined_workbook.create_sheet(title=f"{os.path.splitext(filename)[0]}_{sheet_name}")
+
+            for row in source_sheet.iter_rows():
+                for cell in row:
+                    combined_sheet[cell.coordinate].value = cell.value
+                    combined_sheet[cell.coordinate].number_format = cell.number_format
+
+# Save the combined workbook
+combined_workbook.save(output_file)
+
+# styling Graphs spreadsheet
+headers = [3, 6, 10, 14, 19, 23, 28, 33, 37, 41, 45, 48, 51, 55, 59, 62, 66]
+shaded = [2, 8, 16, 18, 25, 27, 35, 43, 50, 57, 64]
+not_shaded = [1, 7, 9, 15, 17, 24, 26, 34, 36, 42, 44, 49, 56, 58, 63, 65]
+
+graphs = pd.read_excel('combined_tables.xlsx').replace([np.nan, np.inf, -np.inf], '')
+
+
+writer = pd.ExcelWriter(output_file, engine='xlsxwriter')
+
+graphs.to_excel(writer, sheet_name='Graphs', index=False)
+
+workbook = writer.book
+worksheet = writer.sheets['Graphs']
+
+blank_format = workbook.add_format({})
+
+header_format = workbook.add_format({
+    'bold': True,
+    'valign': 'top',
+    'fg_color': '#4472c4',
+    'font_color': "#ffffff",
+    'border': 2,
+    'border_color': '#000000',
+    'align': 'center'
+})
+
+shaded_format = workbook.add_format({
+    'valign': 'top',
+    'fg_color': '#d9e1f2',
+    'border': 2,
+    'border_color': '#000000',
+    'align': 'center'
+})
+
+not_shaded_format = workbook.add_format({
+    'valign': 'top',
+    'border': 2,
+    'border_color': '#000000',
+    'align': 'center'
+})
+
+# styling first header
+for col_num, value in enumerate(graphs.columns.values):
+    if(value[0:8] == 'Unnamed:'):
+        worksheet.write(0, col_num, '', blank_format)
+    else:
+        worksheet.write(0, col_num, value, header_format)
+
+# styling remaining headers
+for row_num in headers:
+    for col_num, value in enumerate(graphs.iloc[row_num - 1]):
+        if(value == '' or (len(str(value)) >= 10 and str(value)[0:8] == 'Unnamed:')):
+            worksheet.write(row_num, col_num, '', blank_format)
+        else:
+            worksheet.write(row_num, col_num, value, header_format)
+
+for row_num in shaded:
+    for col_num, value in enumerate(graphs.iloc[row_num - 1]):
+        if(value != ''):
+            worksheet.write(row_num, col_num, value, shaded_format)
+
+for row_num in not_shaded:
+    for col_num, value in enumerate(graphs.iloc[row_num - 1]):
+        if(value != ''):
+            worksheet.write(row_num, col_num, value, not_shaded_format)
+
+worksheet.set_column('A:Z', 16)
+# styling Pivot Table spreadsheet
+headers = [1, 5, 7, 8, 13, 16, 17, 22, 25, 26, 30, 32, 33, 37, 39, 40, 43, 46, 47, 51, 53, 54, 59]
+
+pivots = pd.read_excel('pivot_table.xlsx').replace([np.nan, np.inf, -np.inf], '')
+
+pivots.to_excel(writer, sheet_name='Pivot Table', index=False)
+
+workbook = writer.book
+worksheet = writer.sheets['Pivot Table']
+
+blank_format = workbook.add_format({})
+
+header_format = workbook.add_format({
+    'bold': True,
+    'fg_color': '#d9e1f2',
+    'border': 1,
+    'border_color': '#8ea9db'
+})
+
+# styling first header
+for col_num, value in enumerate(pivots.columns.values):
+    if(value[0:8] == 'Unnamed:'):
+        worksheet.write(0, col_num, '', blank_format)
+    else:
+        worksheet.write(0, col_num, value, header_format)
+
+# styling remaining headers
+for row_num in headers:
+    for col_num, value in enumerate(pivots.iloc[row_num - 1]):
+        if(value == '' or (len(str(value)) >= 10 and str(value)[0:8] == 'Unnamed:')):
+            worksheet.write(row_num, col_num, '', blank_format)
+        else:
+            worksheet.write(row_num, col_num, value, header_format)
+
+worksheet.set_column('A:Z', 16)
+
+
+df.to_excel(writer, sheet_name='Today RT list of defects', index=False)
+workbook = writer.book
+worksheet = writer.sheets['Today RT list of defects']
+
+header_format = workbook.add_format({
+    'bold': True,
+    'valign': 'top',
+    'fg_color': '#4472c4',
+    'font_color': "#ffffff",
+    'border': 1,
+    'border_color': '#8ea9db' 
+})
+
+odd_format = workbook.add_format({
+    'valign': 'top',
+    'fg_color': '#d9e1f2',
+    'border': 1,
+    'border_color': '#8ea9db' 
+})
+
+for col_num, value in enumerate(df.columns.values):
+    worksheet.write(0, col_num, value, header_format)
+
+for row_num, row_data in df.iterrows():
+    if (row_num + 1) % 2 != 0:
+        for col_num, value in enumerate(df.columns.values):
+            worksheet.write(row_num + 1, col_num, row_data[value], odd_format)
+
+worksheet.set_column('A:O', 10)
+
+writer.close()

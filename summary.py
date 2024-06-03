@@ -93,7 +93,7 @@ for i in range(len(df)):
 
 # count new defects for the day
 for i in reversed(range(len(df))):
-    if df.at[i, 'Created'][9:9+len(day)] == day:
+    if df.at[i, 'Created'][9:9+len(day)] == '30':
         new_defects += 1
     else:
         break
@@ -124,7 +124,6 @@ with pd.ExcelWriter('pivot_table.xlsx', engine='xlsxwriter') as writer:
     total3.index = ['Grand Total']
     p3 = pd.concat([p3, total3]).rename_axis('Row Labels')
 
-    # check for whether indices should be owners or requestors
     p4 = pd.pivot_table(df, values='#', index=['CAC/MOF/FFX Owner'], columns=['CustomField.{Ticket Severity}'], aggfunc='count', fill_value=0)
     p4['Grand Total'] = p4[0:len(p4)].sum(axis=1)
     total4 = pd.DataFrame(p4.sum()).T
@@ -235,16 +234,6 @@ with pd.ExcelWriter('combined_tables.xlsx', engine='xlsxwriter') as writer:
     graphs8.to_excel(writer, sheet_name='Sheet1', startrow=55, index=False)
     graphs9.to_excel(writer, sheet_name='Sheet1', startrow=62, index=False)
 
-"""
-sev2_chart = workbook.add_chart({'type': 'pie'})
-sev2_chart.add_series({
-    'categories': ['Sheet1', 58, 0, 60, 0],  # Categories (x-axis)
-    'values':     ['Sheet1', 58, 1, 60, 1],  # Values (y-axis)
-})
-sev2_chart.set_title({'name': 'Total Number of sev 2 Tickets by owner : ' + str(graphs8.iloc[3, 1])})
-
-worksheet.insert_chart('G36', sev2_chart)
-"""
 
 # Merging files
 file_list = [output_file, 'pivot_table.xlsx', 'combined_tables.xlsx']
@@ -315,7 +304,6 @@ worksheet = writer.sheets['Pivot Table']
 blank_format = workbook.add_format({})
 
 header_format = workbook.add_format({
-    'bold': True,
     'fg_color': '#d9e1f2',
     'border': 1,
     'border_color': '#8ea9db'
@@ -403,5 +391,108 @@ for row_num in not_shaded:
 
 worksheet.set_column('A:Z', 16)
 
+# Inserting graphs
+bar_graph = workbook.add_chart({'type': 'column', 'subtype': 'stacked'})
+bar_graph.add_series({
+    'name': '=Graphs!$B$34',
+    'categories': '=Graphs!$A$35:$A$38',
+    'values': '=Graphs!$B$35:$B$38',
+    'fill': {'color': '#5B9BD5'}
+})
+bar_graph.add_series({
+    'name': '=Graphs!$C$34',
+    'categories': '=Graphs!$A$35:$A$38',
+    'values': '=Graphs!$C$35:$C$38',
+    'fill': {'color': '#ED7D31'}
+})
+bar_graph.add_series({
+    'name': '=Graphs!$D$34',
+    'categories': '=Graphs!$A$35:$A$38',
+    'values': '=Graphs!$D$35:$D$38',
+    'fill': {'color': '#A5A5A5'}
+})
+bar_graph.set_title({
+    'name': 'Defect Status\nSeverity by Owner as of ' + date.today().strftime('%B %-d'),
+    'alignment': {
+        'horizontal': 'center'
+    },
+    'name_font': {
+        'bold': False,
+        'size': 16
+    },
+    'points': [
+        {'fill': {'color': '#5B9BD5'}},
+        {'fill': {'color': '#ED7D31'}},
+        {'fill': {'color': '#A5A5A5'}}
+    ]
+})
+bar_graph.set_y_axis({
+    'major_unit': 2
+})
+bar_graph.set_table({
+    'show_keys': True
+})
+bar_graph.set_legend({'position': 'bottom'})
+worksheet.insert_chart('G34', bar_graph)
+
+tickets_chart = workbook.add_chart({'type': 'pie'})
+tickets_chart.add_series({
+    'categories': ['Graphs', 49, 0, 50, 0],  # Categories (x-axis)
+    'values':     ['Graphs', 49, 1, 50, 1],  # Values (y-axis)
+    'data_labels': {'value': True},
+    'points': [
+        {'fill': {'color': '#5B9BD5'}},
+        {'fill': {'color': '#ED7D31'}},
+    ]
+})
+tickets_chart.set_title({
+    'name': 'TICKETS BY OWNER: ' + str(graphs9.iloc[3, 1]),
+    'alignment': {
+        'horizontal': 'center'
+    },
+    'name_font': {
+        'bold': False,
+        'size': 12
+    },
+})
+tickets_chart.set_legend({'position': 'bottom'})
+worksheet.insert_chart('C49', tickets_chart, {
+    'x_offset': 25,
+    'y_offset': 10,
+    'x_scale': 0.5,
+    'y_scale': 1.0
+})
+
+sev2_chart = workbook.add_chart({'type': 'pie'})
+sev2_chart.add_series({
+    'categories': ['Graphs', 56, 0, 58, 0],  # Categories (x-axis)
+    'values':     ['Graphs', 56, 1, 58, 1],  # Values (y-axis)
+    'data_labels': {'value': True},
+    'points': [
+        {'fill': {'color': '#5B9BD5'}},
+        {'fill': {'color': '#ED7D31'}},
+        {'fill': {'color': '#A5A5A5'}}
+    ]
+})
+sev2_chart.set_title({
+    'name': 'Total Number of sev 2 Tickets by owner : ' + str(graphs8.iloc[3, 1]),
+    'alignment': {
+        'horizontal': 'center'
+    },
+    'name_font': {
+        'bold': False,
+        'size': 12
+    },
+})
+sev2_chart.set_legend({'position': 'bottom'})
+worksheet.insert_chart('C64', sev2_chart, {
+    'x_offset': 25,
+    'y_offset': 10,
+    'x_scale': 0.5,
+    'y_scale': 1.0
+})
+
 # Styling complete
 writer.close()
+os.remove("pivot_table.xlsx")
+os.remove("combined_tables.xlsx")

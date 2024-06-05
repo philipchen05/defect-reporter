@@ -10,92 +10,39 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.keys import Keys
 import shutil
 import time
+import json
 
-# dictionaries of requestors/owners
-reqs = {
-    "ben.whyte (Ben Whyte)": "CAC",
-    "Lisa.Leger <Lisa.Leger@ontario.ca>": "CAC",
-    "nicholas.landry (Nicholas Landry)": "CAC",
-    "aravinth.ramalingam (Aravinth Ramalingam)": "CAC",
-    "lisa.parsons (Lisa Parsons)": "CAC",
-    "jingxin.jiang (Jingxin Jiang)": "CAC",
-    "colleen.pacione (Colleen Pacione)": "CAC",
-    "catherine.ryan (Catherine Ryan)": "CAC",
-    "mariaalejandra.gonzalezmoctezuma (Maria Alejandra Gonzalez Moctezuma)": "CAC",
-    "cynthia.ogbeide (Cynthia Ogbeide)": "MOF",
-    "Tejumade.Adenle@ontario.ca": "MOF",
-    "brenda.boyle (Brenda Boyle)": "MOF",
-    "bukola.ogeleka (Bukola Ogeleka)": "MOF",
-    "tamara.gardner (Tamara Gardner)": "MOF",
-    "Sabrina.DiFrancesco@ontario.ca": "MOF",
-    "shahadat.hossain (Shahadat Hossain)": "CAC",
-    "romnick.galang (Romnick Galang)": "CAC",
-    "allana.allen (Allana Allen)": "MOF",
-    "Azhar.Ahmad@ontario.ca": "CAC",
-    "farzana.aziz (Farzana Aziz)": "MOF",
-    "donna.schmitz (Donna Schmitz)": "FFX",
-    "jeff.jostes (Jeff Jostes)": "FFX",
-    "mohammad.shamsi (Mohammad Shamsi)": "CAC",
-    "ayesa.parvin (Ayesa Parvin)": "CAC"
-}
-owners = {
-    "nicholas.landry (Nicholas Landry)": "CAC",
-    "ben.whyte (Ben Whyte)": "CAC",
-    "lisa.parsons (Lisa Parsons)": "CAC",
-    "jingxin.jiang": "CAC",
-    "colleen.pacione (Colleen Pacione)": "CAC",
-    "catherine.ryan (Catherine Ryan)": "CAC",
-    "mariaalejandra.gonzalezmoctezuma (Maria Alejandra Gonzalez Moctezuma)": "CAC",
-    "aravinth.ramalingam (Aravinth Ramalingam)": "CAC",
-    "bukola.ogeleka (Bukola Ogeleka)": "MOF",
-    "tejumade.adenle": "MOF",
-    "cynthia.ogbeide (Cynthia Ogbeide)": "MOF",
-    "tamara.gardner (Tamara Gardner)": "MOF",
-    "sabrina.difrancesco": "MOF",
-    "jeff.jostes (Jeff Jostes)": "FFX",
-    "mason.graham": "FFX",
-    "amit.dudhat": "FFX",
-    "francesco.leising (Francesco Leising)": "FFX",
-    "fredrick.little (Fredrick Little)": "FFX",
-    "andy.herdlein (Andy Herdlein)": "FFX",
-    "joe.gero": "FFX",
-    "alyssa.dinoto": "FFX",
-    "brian.smedley (Brian Smedley)": "FFX",
-    "alex.umansky": "FFX",
-    "molly.vanryn": "FFX",
-    "phil.cannon": "FFX",
-    "shahadat.hossain": "CAC",
-    "ehizogie.ighile": "FFX",
-    "allana.allen (Allana Allen)": "MOF",
-    "romnick.galang": "CAC",
-    "paul.scott (Paul A Scott)": "MOF",
-    "leann.stout": "FFX",
-    "chris.bosner": "FFX",
-    "brenda.boyle (Brenda Boyle)": "MOF",
-    "donna.schmitz (Donna Castello)": "FFX",
-    "tyler.cabell": "FFX",
-    "joe.gero (Joe Gero)": "FFX",
-    "donna.schmitz (Donna Schmitz)": "FFX",
-    "kevin.powell (Kevin Powell)": "CAC",
-    "farzana.aziz (Farzana Aziz )": "MOF", # extra space for testing
-    "mohammad.shamsi (Mohammad Shamsi)": "CAC"
-}
+# Reading personal information
+with open('private/personal.txt', 'r') as file:
+    utilizador = file.readline()
+    utilizador = utilizador[0:len(utilizador)-1]
+    contrasena = file.readline()
+    contrasena = contrasena[0:len(contrasena)-1]
+    source_path = file.readline()
+    source_path = source_path[0:len(source_path)-1]
+    destination_path = file.readline()
+
+# Reading in dictionaries for requestors/owners
+with open('private/reqs.json', 'r') as json_file:
+    reqs = json.load(json_file)
+with open('private/owners.json', 'r') as json_file:
+    owners = json.load(json_file)
 
 today = date.today().strftime('%m %d %Y')
 day = date.today().strftime('%d')
 
 # Retrieving "Results.xlsx" file
 driver = webdriver.Chrome()
-driver.get("link")
+driver.get("https://rt.ffximg.com")
 title = driver.title
 driver.implicitly_wait(0.5)
 try:
     prod = driver.find_element(By.LINK_TEXT, "Projects - Ontario - PROD")
 except:
     user = driver.find_element(By.ID, "user")
-    user.send_keys("user")
+    user.send_keys(utilizador)
     password = driver.find_element(By.NAME, "pass")
-    password.send_keys("pass")
+    password.send_keys(contrasena)
     login = driver.find_element(By.CLASS_NAME, "btn")
     login.click()
 
@@ -108,7 +55,7 @@ display_columns.send_keys("CustomField.{Ticket Severity}")
 display_columns.send_keys(Keys.ENTER)
 add_col = driver.find_element(By.XPATH, "//*[@id=\"TitleBox--_Search_Build_html--titlebox-outer-div_h-100----RGlzcGxheSBDb2x1bW5z--columns-0\"]/div/div/div[2]/div[3]/div/div/input")
 add_col.click()
-time.sleep(0.1)
+time.sleep(0.2)
 do_search = driver.find_element(By.XPATH, "//*[@id=\"formatbuttons\"]/div[2]/input")
 do_search.click()
 more = driver.find_element(By.ID, "page-more")
@@ -143,14 +90,12 @@ search.click()
 closed_defects = int(driver.find_element(By.XPATH, "//*[@id=\"header\"]/h1").text.split()[1])
 
 # Copying downloaded "Results.xlsx" file to the correct location
-source_path = 'source/path'
-destination_path = 'destination/path'
-shutil.copy(source_path, destination_path)
-os.chdir('downloads')
+shutil.copy(source_path + 'Results.xlsx', destination_path)
+os.chdir(source_path)
 os.remove('Results.xlsx')
 
 driver.quit()
-os.chdir('repository/path')
+os.chdir(destination_path)
 
 # Today RT list of defects
 df = pd.read_excel('Results.xlsx').drop(columns=['QueueName', 'Priority', 'Defect #']).replace([np.nan, np.inf, -np.inf], '')
@@ -270,7 +215,7 @@ with pd.ExcelWriter('pivot_table.xlsx', engine='xlsxwriter') as writer:
 # Graphs
 empty_row = pd.DataFrame([{}])
 
-graphs1 = pd.concat([pd.concat([pd.read_excel('template.xlsx', sheet_name='Graphs', nrows=4, skiprows=3), empty_row], ignore_index=True), empty_row], ignore_index=True).replace([np.nan, np.inf, -np.inf], '').map(lambda x: int(x) if isinstance(x, (int, float)) else x)
+graphs1 = pd.concat([pd.concat([pd.read_excel('private/template.xlsx', sheet_name='Graphs', nrows=4, skiprows=3), empty_row], ignore_index=True), empty_row], ignore_index=True).replace([np.nan, np.inf, -np.inf], '').map(lambda x: int(x) if isinstance(x, (int, float)) else x)
 graphs1.at[0, 'Number'] = new_defects
 #### set defects closed today
 graphs1.at[1, 'Number'] = 0
@@ -580,7 +525,7 @@ bar_graph.set_table({
     'show_keys': True
 })
 bar_graph.set_legend({'position': 'bottom'})
-worksheet.insert_chart('G34', bar_graph)
+worksheet.insert_chart('G34', bar_graph, {'y_scale': 1.4})
 
 tickets_chart = workbook.add_chart({'type': 'pie'})
 tickets_chart.add_series({

@@ -4,9 +4,12 @@ from datetime import date
 import os
 import openpyxl
 from openpyxl import load_workbook
-
-today = date.today().strftime('%m %d %Y')
-day = date.today().strftime('%d')
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.common.keys import Keys
+import shutil
+import time
 
 # dictionaries of requestors/owners
 reqs = {
@@ -77,6 +80,77 @@ owners = {
     "farzana.aziz (Farzana Aziz )": "MOF", # extra space for testing
     "mohammad.shamsi (Mohammad Shamsi)": "CAC"
 }
+
+today = date.today().strftime('%m %d %Y')
+day = date.today().strftime('%d')
+
+# Retrieving "Results.xlsx" file
+driver = webdriver.Chrome()
+driver.get("link")
+title = driver.title
+driver.implicitly_wait(0.5)
+try:
+    prod = driver.find_element(By.LINK_TEXT, "Projects - Ontario - PROD")
+except:
+    user = driver.find_element(By.ID, "user")
+    user.send_keys("user")
+    password = driver.find_element(By.NAME, "pass")
+    password.send_keys("pass")
+    login = driver.find_element(By.CLASS_NAME, "btn")
+    login.click()
+
+prod = driver.find_element(By.LINK_TEXT, "Projects - Ontario - PROD")
+prod.click()
+edit_search = driver.find_element(By.ID, "page-edit_search")
+edit_search.click()
+display_columns = driver.find_element(By.ID, "SelectDisplayColumns-selectized")
+display_columns.send_keys("CustomField.{Ticket Severity}")
+display_columns.send_keys(Keys.ENTER)
+add_col = driver.find_element(By.XPATH, "//*[@id=\"TitleBox--_Search_Build_html--titlebox-outer-div_h-100----RGlzcGxheSBDb2x1bW5z--columns-0\"]/div/div/div[2]/div[3]/div/div/input")
+add_col.click()
+time.sleep(0.1)
+do_search = driver.find_element(By.XPATH, "//*[@id=\"formatbuttons\"]/div[2]/input")
+do_search.click()
+more = driver.find_element(By.ID, "page-more")
+more.click()
+excel = driver.find_element(By.LINK_TEXT, "Microsoft Excel")
+excel.click()
+
+# Retrieving number of closed tickets
+edit_search = driver.find_element(By.ID, "page-edit_search")
+edit_search.click()
+junk = driver.find_element(By.XPATH, "//*[@id=\"TitleBox--_Search_Build_html------Q3VycmVudCBzZWFyY2g6IA__---0\"]/div/div[1]/select/option[2]")
+junk.click()
+delete = driver.find_element(By.NAME, "DeleteClause")
+delete.click()
+status = driver.find_element(By.XPATH, "//*[@id=\"TitleBox--_Search_Build_html------QWRkIENyaXRlcmlh---0\"]/div/div[5]/div[3]/div/button/div/div/div")
+status.click()
+input_status = driver.find_element(By.XPATH, "//*[@id=\"TitleBox--_Search_Build_html------QWRkIENyaXRlcmlh---0\"]/div/div[5]/div[3]/div/div/div[1]/input")
+input_status.send_keys("closed")
+input_status.send_keys(Keys.ENTER)
+created = driver.find_element(By.XPATH, "//*[@id=\"TitleBox--_Search_Build_html------QWRkIENyaXRlcmlh---0\"]/div/div[10]/div[1]/div/button/div/div/div")
+created.click()
+last_updated = driver.find_element(By.XPATH, "//*[@id=\"bs-select-19-4\"]/span")
+last_updated.click()
+before = driver.find_element(By.XPATH, "//*[@id=\"TitleBox--_Search_Build_html------QWRkIENyaXRlcmlh---0\"]/div/div[10]/div[2]/div/button")
+before.click()
+on = driver.find_element(By.XPATH, "//*[@id=\"bs-select-20-1\"]")
+on.click()
+fecha = driver.find_element(By.XPATH, "//*[@id=\"ValueOfDate\"]")
+fecha.send_keys(date.today().strftime('%Y-%m-%d'))
+search = driver.find_element(By.XPATH, "//*[@id=\"DoSearch\"]")
+search.click()
+closed_defects = int(driver.find_element(By.XPATH, "//*[@id=\"header\"]/h1").text.split()[1])
+
+# Copying downloaded "Results.xlsx" file to the correct location
+source_path = 'source/path'
+destination_path = 'destination/path'
+shutil.copy(source_path, destination_path)
+os.chdir('downloads')
+os.remove('Results.xlsx')
+
+driver.quit()
+os.chdir('repository/path')
 
 # Today RT list of defects
 df = pd.read_excel('Results.xlsx').drop(columns=['QueueName', 'Priority', 'Defect #']).replace([np.nan, np.inf, -np.inf], '')
@@ -569,9 +643,4 @@ worksheet.insert_chart('C64', sev2_chart, {
 writer.close()
 os.remove("pivot_table.xlsx")
 os.remove("combined_tables.xlsx")
-
-
-
-# formatting bug: since lists used for formatting are fixed and 
-# number of rows can vary from day to day, sometimes the formats
-# will be off -> see June 4 defect report
+os.remove("Results.xlsx")

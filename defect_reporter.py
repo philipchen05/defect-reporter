@@ -216,9 +216,8 @@ empty_row = pd.DataFrame([{}])
 
 graphs1 = pd.concat([pd.concat([pd.read_excel('private/template.xlsx', sheet_name='Graphs', nrows=4, skiprows=3), empty_row], ignore_index=True), empty_row], ignore_index=True).replace([np.nan, np.inf, -np.inf], '').map(lambda x: int(x) if isinstance(x, (int, float)) else x)
 graphs1.at[0, 'Number'] = new_defects
-#### set defects closed today
-graphs1.at[1, 'Number'] = 0
-graphs1.at[2, 'Number'] = new_defects + graphs1.at[1, 'Number']
+graphs1.at[1, 'Number'] = closed_defects
+graphs1.at[2, 'Number'] = new_defects + closed_defects
 
 graphs2 = pd.read_excel('pivot_table.xlsx', sheet_name='Pivot Table', nrows=5, skiprows=1).replace([np.nan, np.inf, -np.inf], '')
 graphs2 = pd.concat([pd.concat([pd.concat([graphs2, empty_row], ignore_index=True), empty_row], ignore_index=True), empty_row], ignore_index=True).replace([np.nan, np.inf, -np.inf], '').map(lambda x: int(x) if isinstance(x, (int, float)) else x).rename(columns={'Row Labels': 'CAC/MOF Requestor'})

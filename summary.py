@@ -84,6 +84,9 @@ df['CAC/MOF Requestor'] = None
 df['Ministry/FFX Owner'] = None
 df['CAC/MOF/FFX Owner'] = None
 
+# Note: need to update 'Customer' column to display 5 decimal places instead of 3
+# (i.e. show 2.02405E+16 instead of 2.024E+16)
+
 new_defects = 0
 
 for i in range(len(df)):
@@ -148,7 +151,7 @@ with pd.ExcelWriter('pivot_table.xlsx', engine='xlsxwriter') as writer:
     total7.index = ['Grand Total']
     p7 = pd.concat([p7, total2]).rename_axis('CAC/MOF/FFX Owner')
 
-    p8 = pd.pivot_table(df, values='#', index=['CustomField.{Current Status}'], columns=['CustomField.{Ticket Severity}'], aggfunc='count', fill_value=0)
+    p8 = pd.pivot_table(df, values='#', index=['Status'], columns=['CustomField.{Ticket Severity}'], aggfunc='count', fill_value=0)
     p8['Grand Total'] = p8[0:len(p8)].sum(axis=1)
     total8 = pd.DataFrame(p8.sum()).T
     total8.index = ['Grand Total']
@@ -241,7 +244,6 @@ file_list = [output_file, 'pivot_table.xlsx', 'combined_tables.xlsx']
 combined_workbook = openpyxl.Workbook()
 combined_workbook.remove(combined_workbook.active)
 
-# Iterate over each Excel file in the input folder
 for filename in file_list:
     file_path = os.path.join(os.getcwd(), filename)
     workbook = load_workbook(file_path)
@@ -292,7 +294,57 @@ for row_num, row_data in df.iterrows():
 worksheet.set_column('A:O', 10)
 
 # styling Pivot Table spreadsheet
-headers = [1, 5, 7, 8, 13, 16, 17, 22, 25, 26, 30, 32, 33, 37, 39, 40, 43, 46, 47, 51, 53, 54, 59]
+pivot_list = [p1, p2, p3, p4, p5, p6, p7, p8]
+headers = [1, 7, 8, 16, 17, 25, 26, 32, 33, 39, 40, 43, 46, 47, 53, 54]
+if(len(p1) == 2):
+    headers.append(3)
+elif(len(p1) == 3):
+    headers.append(4)
+elif(len(p1) == 4):
+    headers.append(5)
+if(len(p2) == 2):
+    headers.append(10)
+elif(len(p2) == 3):
+    headers.append(11)
+elif(len(p2) == 4):
+    headers.append(12)
+elif(len(p2) == 5):
+    headers.append(13)
+if(len(p3) == 2):
+    headers.append(19)
+elif(len(p3) == 3):
+    headers.append(20)
+elif(len(p3) == 4):
+    headers.append(21)
+elif(len(p3) == 5):
+    headers.append(22)
+if(len(p4) == 2):
+    headers.append(28)
+elif(len(p4) == 3):
+    headers.append(29)
+elif(len(p4) == 4):
+    headers.append(30)
+if(len(p5) == 2):
+    headers.append(35)
+elif(len(p5) == 3):
+    headers.append(36)
+elif(len(p5) == 4):
+    headers.append(37)
+if(len(p7) == 2):
+    headers.append(49)
+elif(len(p7) == 3):
+    headers.append(50)
+elif(len(p7) == 4):
+    headers.append(51)
+if(len(p8) == 2):
+    headers.append(56)
+elif(len(p8) == 3):
+    headers.append(57)
+elif(len(p8) == 4):
+    headers.append(58)
+elif(len(p8) == 5):
+    headers.append(59)
+headers.sort()
 
 pivots = pd.read_excel('pivot_table.xlsx').replace([np.nan, np.inf, -np.inf], '')
 
@@ -312,24 +364,45 @@ header_format = workbook.add_format({
 # styling first header
 for col_num, value in enumerate(pivots.columns.values):
     if(value[0:8] == 'Unnamed:'):
-        worksheet.write(0, col_num, '', blank_format)
+        if(col_num <= pivot_list[0].shape[1]):
+            worksheet.write(0, col_num, '', header_format)
+        else:
+            worksheet.write(0, col_num, '', blank_format)
     else:
         worksheet.write(0, col_num, value, header_format)
 
 # styling remaining headers
-for row_num in headers:
-    for col_num, value in enumerate(pivots.iloc[row_num - 1]):
+pivot_list_index = 0
+for i in range(len(headers)):
+    if(abs(i - 2) % 3 == 0):
+        pivot_list_index += 1
+    for col_num, value in enumerate(pivots.iloc[headers[i] - 1]):
         if(value == '' or (len(str(value)) >= 10 and str(value)[0:8] == 'Unnamed:')):
-            worksheet.write(row_num, col_num, '', blank_format)
+            if(col_num <= pivot_list[pivot_list_index].shape[1]):
+                worksheet.write(headers[i], col_num, '', header_format)
+            else:
+                worksheet.write(headers[i], col_num, '', blank_format)
         else:
-            worksheet.write(row_num, col_num, value, header_format)
+            worksheet.write(headers[i], col_num, value, header_format)
 
 worksheet.set_column('A:Z', 16)
 
 # styling Graphs spreadsheet
-headers = [3, 6, 10, 14, 19, 23, 28, 33, 37, 41, 45, 48, 51, 55, 59, 62, 66]
-shaded = [2, 8, 16, 18, 25, 27, 35, 43, 50, 57, 64]
-not_shaded = [1, 7, 9, 15, 17, 24, 26, 34, 36, 42, 44, 49, 56, 58, 63, 65]
+headers = [3, 6, 6+len(graphs2)-3, 14, 14+len(graphs3)-3, 23, 23+len(graphs4)-3, 33, 33+len(graphs5)-3, 41, 41+len(graphs6)-3, 48, 51, 55, 59, 62, 66]
+shaded = [2, 8, 16, 25, 35, 43, 50, 57, 64]
+if(len(graphs3) >= 8):
+    shaded.append(18)
+if(len(graphs4) >= 8):
+    shaded.append(27)
+not_shaded = [1, 7, 15, 17, 24, 26, 34, 42, 44, 49, 56, 63]
+if(len(graphs2) >= 7):
+    not_shaded.append(9)
+if(len(graphs5) >= 7):
+    not_shaded.append(36)
+if(len(graphs8) >= 7):
+    not_shaded.append(58)
+if(len(graphs9) >= 7):
+    not_shaded.append(65)
 
 graphs = pd.read_excel('combined_tables.xlsx').replace([np.nan, np.inf, -np.inf], '')
 graphs.to_excel(writer, sheet_name='Graphs', index=False)
@@ -496,3 +569,9 @@ worksheet.insert_chart('C64', sev2_chart, {
 writer.close()
 os.remove("pivot_table.xlsx")
 os.remove("combined_tables.xlsx")
+
+
+
+# formatting bug: since lists used for formatting are fixed and 
+# number of rows can vary from day to day, sometimes the formats
+# will be off -> see June 4 defect report

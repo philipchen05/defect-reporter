@@ -1,3 +1,4 @@
+# Note: Ensure a stable internet connection before executing program
 import pandas as pd
 import numpy as np
 from datetime import date
@@ -28,7 +29,7 @@ with open('private/owners.json', 'r') as json_file:
     owners = json.load(json_file)
 
 today = date.today().strftime('%m %d %Y')
-day = date.today().strftime('%d')
+day = date.today().strftime('%-d')
 
 # Retrieving "Results.xlsx" file
 driver = webdriver.Chrome()
@@ -102,9 +103,6 @@ df['CAC/MOF Requestor'] = None
 df['Ministry/FFX Owner'] = None
 df['CAC/MOF/FFX Owner'] = None
 
-# Note: need to update 'Customer' column to display 5 decimal places instead of 3
-# (i.e. show 2.02405E+16 instead of 2.024E+16)
-
 new_defects = 0
 
 for i in range(len(df)):
@@ -114,7 +112,7 @@ for i in range(len(df)):
 
 # count new defects for the day
 for i in reversed(range(len(df))):
-    if df.at[i, 'Created'][9:9+len(day)] == '30':
+    if df.at[i, 'Created'][9:9+len(day)] == day:
         new_defects += 1
     else:
         break
@@ -327,6 +325,8 @@ elif(len(p2) == 4):
     headers.append(12)
 elif(len(p2) == 5):
     headers.append(13)
+elif(len(p2) == 6):
+    headers.append(14)
 if(len(p3) == 2):
     headers.append(19)
 elif(len(p3) == 3):
@@ -335,6 +335,8 @@ elif(len(p3) == 4):
     headers.append(21)
 elif(len(p3) == 5):
     headers.append(22)
+elif(len(p3) == 6):
+    headers.append(23)
 if(len(p4) == 2):
     headers.append(28)
 elif(len(p4) == 3):
@@ -361,6 +363,8 @@ elif(len(p8) == 4):
     headers.append(58)
 elif(len(p8) == 5):
     headers.append(59)
+elif(len(p8) == 6):
+    headers.append(60)
 headers.sort()
 
 pivots = pd.read_excel('pivot_table.xlsx').replace([np.nan, np.inf, -np.inf], '')

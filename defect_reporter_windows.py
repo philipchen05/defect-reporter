@@ -27,6 +27,7 @@ with open('private\\reqs.json', 'r') as json_file:
     reqs = json.load(json_file)
 with open('private\\owners.json', 'r') as json_file:
     owners = json.load(json_file)
+
 today = date.today().strftime('%m %d %Y')
 day = date.today().strftime('%#d')
 
@@ -590,3 +591,5 @@ writer.close()
 os.remove("pivot_table.xlsx")
 os.remove("combined_tables.xlsx")
 os.remove("Results.xlsx")
+shutil.copy(output_file, source_path)
+os.remove(output_file)

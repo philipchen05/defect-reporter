@@ -11,6 +11,10 @@ from selenium.webdriver.common.keys import Keys
 import shutil
 import time
 import json
+import warnings
+
+# Ignore warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 
 # Reading personal information
 with open('private/personal.txt', 'r') as file:

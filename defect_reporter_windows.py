@@ -23,7 +23,7 @@ with open('private\\personal.txt', 'r') as file:
     contrasena = file.readline()
     contrasena = contrasena[0:len(contrasena)-1]
     source_path = file.readline()
-    source_path = source_path[3:len(source_path)-1]
+    source_path = source_path[0:len(source_path)-1]
     destination_path = file.readline()
 
 # Reading in dictionaries for requestors/owners

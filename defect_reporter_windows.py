@@ -422,6 +422,10 @@ if(len(graphs4) >= 8):
 not_shaded = [1, 7, 15, 17, 24, 26, 34, 42, 44, 49, 56, 63]
 if(len(graphs2) >= 7):
     not_shaded.append(9)
+if(len(graphs3) >= 9):
+    not_shaded.append(19)
+if(len(graphs4) >= 9):
+    not_shaded.append(28)
 if(len(graphs5) >= 7):
     not_shaded.append(36)
 if(len(graphs8) >= 7):

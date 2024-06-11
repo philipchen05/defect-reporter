@@ -8,6 +8,7 @@ from openpyxl import load_workbook
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.options import Options
 import shutil
 import time
 import json
@@ -36,7 +37,9 @@ today = date.today().strftime('%m %d %Y')
 day = date.today().strftime('%-d')
 
 # Retrieving "Results.xlsx" file
-driver = webdriver.Chrome()
+options = Options()
+options.add_argument('--headless=new')
+driver = webdriver.Chrome(options)
 driver.get("https://rt.ffximg.com")
 title = driver.title
 driver.implicitly_wait(0.5)

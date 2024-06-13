@@ -602,5 +602,8 @@ writer.close()
 os.remove("pivot_table.xlsx")
 os.remove("combined_tables.xlsx")
 os.remove("Results.xlsx")
-shutil.copy(output_file, source_path)
+try:
+    shutil.copy(output_file, source_path)
+except:
+    print("ERROR: A file with the same name is already open and cannot be overwritten. Please close the file and try again.")
 os.remove(output_file)
